@@ -11,38 +11,38 @@ const API_CACHE_NAME = 'bookmarker-api-v1';
 
 // Resources to cache immediately
 const STATIC_RESOURCES = [
-  '/',
-  '/index.html',
-  '/css/variables.css',
-  '/css/main.css',
-  '/css/components.css',
-  '/js/app.js',
-  '/js/controllers/bookmark-controller.js',
-  '/js/controllers/bookmark-form-controller.js',
-  '/js/controllers/category-form-controller.js',
-  '/js/controllers/search-controller.js',
-  '/js/controllers/share-controller.js',
-  '/js/controllers/import-export-controller.js',
-  '/js/models/database-service.js',
-  '/js/models/bookmark-repository.js',
-  '/js/models/category-repository.js',
-  '/js/utils/modal-manager.js',
-  '/js/utils/toast-manager.js',
-  '/js/utils/network-manager.js',
-  '/js/utils/router.js',
-  '/js/utils/settings-manager.js',
-  '/js/wasm/sqlite-wasm-adapter.js',
-  '/js/wasm/sqlite-worker.js',
-  '/manifest.json',
-  '/icons/icon-72x72.png',
-  '/icons/icon-96x96.png',
-  '/icons/icon-128x128.png',
-  '/icons/icon-144x144.png',
-  '/icons/icon-152x152.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-384x384.png',
-  '/icons/icon-512x512.png',
-  '/offline.html'
+  './',
+  'index.html',
+  'css/variables.css',
+  'css/main.css',
+  'css/components.css',
+  'js/app.js',
+  'js/controllers/bookmark-controller.js',
+  'js/controllers/bookmark-form-controller.js',
+  'js/controllers/category-form-controller.js',
+  'js/controllers/search-controller.js',
+  'js/controllers/share-controller.js',
+  'js/controllers/import-export-controller.js',
+  'js/models/database-service.js',
+  'js/models/bookmark-repository.js',
+  'js/models/category-repository.js',
+  'js/utils/modal-manager.js',
+  'js/utils/toast-manager.js',
+  'js/utils/network-manager.js',
+  'js/utils/router.js',
+  'js/utils/settings-manager.js',
+  'js/wasm/sqlite-wasm-adapter.js',
+  'js/wasm/sqlite-worker.js',
+  'manifest.json',
+  'icons/icon-72x72.png',
+  'icons/icon-96x96.png',
+  'icons/icon-128x128.png',
+  'icons/icon-144x144.png',
+  'icons/icon-152x152.png',
+  'icons/icon-192x192.png',
+  'icons/icon-384x384.png',
+  'icons/icon-512x512.png',
+  'offline.html'
 ];
 
 // Font resources to cache
@@ -145,7 +145,7 @@ async function handleLocalRequest(request) {
       }
       
       // If cache fails too, return offline page
-      return caches.match('/offline.html');
+      return caches.match('offline.html');
     }
   }
   
@@ -171,7 +171,7 @@ async function handleLocalRequest(request) {
     
     // For image requests, return a placeholder
     if (request.url.match(/\.(jpg|jpeg|png|gif|svg)$/)) {
-      return caches.match('/icons/placeholder.png');
+      return caches.match('icons/placeholder.png');
     }
     
     // For other resources, just return the error
@@ -301,10 +301,10 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: data.body,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: 'icons/icon-192x192.png',
+    badge: 'icons/badge-72x72.png',
     data: {
-      url: data.url || '/'
+      url: data.url || './'
     }
   };
   

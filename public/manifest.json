@@ -2,7 +2,7 @@
   "name": "Bookmarker",
   "short_name": "Bookmarker",
   "description": "A modern PWA for organizing and managing bookmarks",
-  "start_url": "/index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4285f4",
@@ -49,7 +49,7 @@
     }
   ],
   "share_target": {
-    "action": "/share-target/",
+    "action": "share-target/",
     "method": "GET",
     "params": {
       "title": "title",

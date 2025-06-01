@@ -222,7 +222,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
+                navigator.serviceWorker.register('service-worker.js')
                     .then(registration => {
                         console.log('Service Worker registered with scope:', registration.scope);
                     })
@@ -231,6 +231,61 @@
                     });
             });
         }
+    </script>
+    
+    <!-- Button initialization script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize button event listeners
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    console.log('Button clicked:', this.id || this.textContent.trim());
+                    
+                    // Handle specific buttons
+                    if (this.id === 'menu-toggle') {
+                        document.querySelector('.app-container').classList.toggle('nav-open');
+                    }
+                    
+                    if (this.id === 'search-toggle') {
+                        document.getElementById('search-container').classList.toggle('hidden');
+                        if (!document.getElementById('search-container').classList.contains('hidden')) {
+                            document.getElementById('search-input').focus();
+                        }
+                    }
+                    
+                    if (this.id === 'add-bookmark') {
+                        const modalContainer = document.getElementById('modal-container');
+                        const bookmarkModal = document.getElementById('bookmark-modal');
+                        
+                        modalContainer.classList.remove('hidden');
+                        bookmarkModal.classList.remove('hidden');
+                    }
+                    
+                    if (this.classList.contains('close-modal')) {
+                        const modalContainer = document.getElementById('modal-container');
+                        const modals = document.querySelectorAll('.modal');
+                        
+                        modalContainer.classList.add('hidden');
+                        modals.forEach(modal => modal.classList.add('hidden'));
+                    }
+                });
+            });
+            
+            // Handle modal backdrop clicks
+            const modalBackdrop = document.querySelector('.modal-backdrop');
+            if (modalBackdrop) {
+                modalBackdrop.addEventListener('click', function() {
+                    const modalContainer = document.getElementById('modal-container');
+                    const modals = document.querySelectorAll('.modal');
+                    
+                    modalContainer.classList.add('hidden');
+                    modals.forEach(modal => modal.classList.add('hidden'));
+                });
+            }
+            
+            console.log('Button event listeners initialized');
+        });
     </script>
 </body>
 </html>
