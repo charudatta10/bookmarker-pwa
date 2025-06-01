@@ -1,443 +1,549 @@
 /**
- * UI Controller - Manages all UI interactions and events
+ * UI Controller - Manages UI interactions and event handling
  */
 export class UIController {
   constructor() {
-    // DOM elements
-    this.menuToggle = document.getElementById('menu-toggle');
-    this.sideNav = document.getElementById('side-nav');
-    this.searchToggle = document.getElementById('search-toggle');
-    this.searchContainer = document.getElementById('search-container');
-    this.searchInput = document.getElementById('search-input');
-    this.clearSearch = document.getElementById('clear-search');
-    this.addBookmarkBtn = document.getElementById('add-bookmark');
-    this.addCategoryBtn = document.getElementById('add-category');
-    this.gridViewBtn = document.getElementById('grid-view-button');
-    this.listViewBtn = document.getElementById('list-view-button');
-    this.bookmarksContainer = document.getElementById('bookmarks-container');
-    this.modalContainer = document.getElementById('modal-container');
-    this.bookmarkModal = document.getElementById('bookmark-modal');
-    this.categoryModal = document.getElementById('category-modal');
-    this.closeModalBtns = document.querySelectorAll('.close-modal');
-    this.saveBookmarkBtn = document.getElementById('save-bookmark');
-    this.saveCategoryBtn = document.getElementById('save-category');
-    this.settingsButton = document.getElementById('settings-button');
-    this.importExportButton = document.getElementById('import-export-button');
-    
-    // State
-    this.isSearchOpen = false;
-    this.currentView = 'grid';
+    this.initEventListeners();
+    this.modalStack = [];
   }
-  
+
   /**
-   * Initialize the UI controller
+   * Initialize all event listeners
    */
-  init() {
-    this.attachEventListeners();
-    this.createSampleBookmarks(); // Temporary for UI testing
-  }
-  
-  /**
-   * Attach event listeners to UI elements
-   */
-  attachEventListeners() {
+  initEventListeners() {
     // Menu toggle
-    this.menuToggle.addEventListener('click', () => {
-      this.sideNav.classList.toggle('open');
-    });
-    
+    const menuToggle = document.getElementById('menu-toggle');
+    if (menuToggle) {
+      menuToggle.addEventListener('click', () => this.toggleMenu());
+    }
+
     // Search toggle
-    this.searchToggle.addEventListener('click', () => {
-      this.toggleSearch();
-    });
-    
-    // Clear search
-    this.clearSearch.addEventListener('click', () => {
-      this.searchInput.value = '';
-      this.searchInput.focus();
-    });
-    
-    // View toggle
-    this.gridViewBtn.addEventListener('click', () => {
-      this.setView('grid');
-    });
-    
-    this.listViewBtn.addEventListener('click', () => {
-      this.setView('list');
-    });
-    
-    // Add bookmark
-    this.addBookmarkBtn.addEventListener('click', () => {
-      this.openModal('bookmark');
-    });
-    
-    // Add category
-    this.addCategoryBtn.addEventListener('click', () => {
-      this.openModal('category');
-    });
-    
-    // Close modals
-    this.closeModalBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.closeModal();
-      });
-    });
-    
-    // Modal backdrop click
-    this.modalContainer.querySelector('.modal-backdrop').addEventListener('click', () => {
-      this.closeModal();
-    });
-    
-    // Save bookmark
-    this.saveBookmarkBtn.addEventListener('click', () => {
-      this.saveBookmark();
-    });
-    
-    // Save category
-    this.saveCategoryBtn.addEventListener('click', () => {
-      this.saveCategory();
-    });
-    
+    const searchToggle = document.getElementById('search-toggle');
+    if (searchToggle) {
+      searchToggle.addEventListener('click', () => this.toggleSearch());
+    }
+
+    // Add bookmark button
+    const addBookmarkBtn = document.getElementById('add-bookmark');
+    if (addBookmarkBtn) {
+      addBookmarkBtn.addEventListener('click', () => this.showAddBookmarkModal());
+    }
+
+    // Add category button
+    const addCategoryBtn = document.getElementById('add-category');
+    if (addCategoryBtn) {
+      addCategoryBtn.addEventListener('click', () => this.showAddCategoryModal());
+    }
+
     // Settings button
-    this.settingsButton.addEventListener('click', () => {
-      this.showView('settings-view');
-    });
-    
+    const settingsBtn = document.getElementById('settings-button');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => this.showSettings());
+    }
+
     // Import/Export button
-    this.importExportButton.addEventListener('click', () => {
-      this.showView('import-export-view');
-    });
+    const importExportBtn = document.getElementById('import-export-button');
+    if (importExportBtn) {
+      importExportBtn.addEventListener('click', () => this.showImportExport());
+    }
+
+    // View toggle buttons
+    const gridViewBtn = document.getElementById('grid-view-button');
+    const listViewBtn = document.getElementById('list-view-button');
     
+    if (gridViewBtn) {
+      gridViewBtn.addEventListener('click', () => this.setViewMode('grid'));
+    }
+    
+    if (listViewBtn) {
+      listViewBtn.addEventListener('click', () => this.setViewMode('list'));
+    }
+
+    // Sort button
+    const sortBtn = document.getElementById('sort-button');
+    if (sortBtn) {
+      sortBtn.addEventListener('click', () => this.showSortOptions());
+    }
+
+    // Modal close buttons
+    const closeButtons = document.querySelectorAll('.close-modal');
+    closeButtons.forEach(button => {
+      button.addEventListener('click', () => this.closeCurrentModal());
+    });
+
+    // Modal backdrop
+    const modalBackdrop = document.querySelector('.modal-backdrop');
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener('click', () => this.closeCurrentModal());
+    }
+
+    // Save bookmark button
+    const saveBookmarkBtn = document.getElementById('save-bookmark');
+    if (saveBookmarkBtn) {
+      saveBookmarkBtn.addEventListener('click', () => this.saveBookmark());
+    }
+
+    // Save category button
+    const saveCategoryBtn = document.getElementById('save-category');
+    if (saveCategoryBtn) {
+      saveCategoryBtn.addEventListener('click', () => this.saveCategory());
+    }
+
+    // Add new category button in bookmark form
+    const addNewCategoryBtn = document.getElementById('add-new-category');
+    if (addNewCategoryBtn) {
+      addNewCategoryBtn.addEventListener('click', () => {
+        this.showAddCategoryModal(true); // true indicates called from bookmark form
+      });
+    }
+
     // Category list items
-    document.querySelectorAll('.category-item').forEach(item => {
+    const categoryItems = document.querySelectorAll('.category-item');
+    categoryItems.forEach(item => {
       item.addEventListener('click', () => {
         this.selectCategory(item.dataset.category);
       });
     });
+
+    // Clear search button
+    const clearSearchBtn = document.getElementById('clear-search');
+    if (clearSearchBtn) {
+      clearSearchBtn.addEventListener('click', () => this.clearSearch());
+    }
+
+    // Search input
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => this.handleSearchInput());
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Escape key closes modals
+      if (e.key === 'Escape') {
+        this.closeCurrentModal();
+      }
+      
+      // Ctrl+K or Cmd+K for search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        this.toggleSearch(true); // true forces open
+      }
+    });
+
+    console.log('UI Controller initialized');
   }
-  
+
   /**
-   * Toggle search container visibility
+   * Toggle menu visibility
    */
-  toggleSearch() {
-    this.isSearchOpen = !this.isSearchOpen;
-    this.searchContainer.classList.toggle('hidden', !this.isSearchOpen);
-    
-    if (this.isSearchOpen) {
-      this.searchInput.focus();
+  toggleMenu() {
+    const appContainer = document.querySelector('.app-container');
+    if (appContainer) {
+      appContainer.classList.toggle('nav-open');
+      console.log('Menu toggled');
     }
   }
-  
+
   /**
-   * Set the current view (grid or list)
-   * @param {string} view - The view type ('grid' or 'list')
+   * Toggle search visibility
+   * @param {boolean} forceOpen - Whether to force open the search
    */
-  setView(view) {
-    this.currentView = view;
-    
-    if (view === 'grid') {
-      this.bookmarksContainer.classList.add('grid-view');
-      this.bookmarksContainer.classList.remove('list-view');
-      this.gridViewBtn.classList.add('active');
-      this.listViewBtn.classList.remove('active');
-    } else {
-      this.bookmarksContainer.classList.add('list-view');
-      this.bookmarksContainer.classList.remove('grid-view');
-      this.gridViewBtn.classList.remove('active');
-      this.listViewBtn.classList.add('active');
-    }
-    
-    // Save preference to localStorage
-    localStorage.setItem('bookmarker-view-preference', view);
-  }
-  
-  /**
-   * Open a modal
-   * @param {string} modalType - The type of modal to open ('bookmark' or 'category')
-   */
-  openModal(modalType) {
-    this.modalContainer.classList.remove('hidden');
-    
-    if (modalType === 'bookmark') {
-      this.bookmarkModal.classList.remove('hidden');
-      this.categoryModal.classList.add('hidden');
-      document.getElementById('bookmark-url').focus();
-    } else if (modalType === 'category') {
-      this.categoryModal.classList.remove('hidden');
-      this.bookmarkModal.classList.add('hidden');
-      document.getElementById('category-name').focus();
+  toggleSearch(forceOpen = false) {
+    const searchContainer = document.getElementById('search-container');
+    if (searchContainer) {
+      if (forceOpen) {
+        searchContainer.classList.remove('hidden');
+      } else {
+        searchContainer.classList.toggle('hidden');
+      }
+      
+      if (!searchContainer.classList.contains('hidden')) {
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+      
+      console.log('Search toggled');
     }
   }
-  
+
   /**
-   * Close the current modal
+   * Clear search
    */
-  closeModal() {
-    this.modalContainer.classList.add('hidden');
-    this.bookmarkModal.classList.add('hidden');
-    this.categoryModal.classList.add('hidden');
+  clearSearch() {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.value = '';
+      searchInput.focus();
+    }
     
-    // Reset form fields
-    document.getElementById('bookmark-form').reset();
-    document.getElementById('category-form').reset();
+    // Trigger search clear event
+    window.dispatchEvent(new CustomEvent('search-cleared'));
+    console.log('Search cleared');
   }
-  
+
   /**
-   * Save a bookmark
+   * Handle search input
+   */
+  handleSearchInput() {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      const query = searchInput.value.trim();
+      
+      // Trigger search event
+      window.dispatchEvent(new CustomEvent('search-query', {
+        detail: { query }
+      }));
+      
+      console.log('Search query:', query);
+    }
+  }
+
+  /**
+   * Show add bookmark modal
+   */
+  showAddBookmarkModal() {
+    const modalContainer = document.getElementById('modal-container');
+    const bookmarkModal = document.getElementById('bookmark-modal');
+    
+    if (modalContainer && bookmarkModal) {
+      modalContainer.classList.remove('hidden');
+      bookmarkModal.classList.remove('hidden');
+      
+      // Set modal title
+      const modalTitle = bookmarkModal.querySelector('#bookmark-modal-title');
+      if (modalTitle) {
+        modalTitle.textContent = 'Add Bookmark';
+      }
+      
+      // Reset form
+      const bookmarkForm = document.getElementById('bookmark-form');
+      if (bookmarkForm) {
+        bookmarkForm.reset();
+      }
+      
+      // Add to modal stack
+      this.modalStack.push('bookmark');
+      
+      console.log('Add bookmark modal shown');
+    }
+  }
+
+  /**
+   * Show add category modal
+   * @param {boolean} fromBookmarkForm - Whether called from bookmark form
+   */
+  showAddCategoryModal(fromBookmarkForm = false) {
+    const modalContainer = document.getElementById('modal-container');
+    const categoryModal = document.getElementById('category-modal');
+    
+    if (modalContainer && categoryModal) {
+      // If called from bookmark form, store current modal
+      if (fromBookmarkForm) {
+        // Store that we came from bookmark form
+        categoryModal.dataset.fromBookmarkForm = 'true';
+      } else {
+        delete categoryModal.dataset.fromBookmarkForm;
+      }
+      
+      modalContainer.classList.remove('hidden');
+      categoryModal.classList.remove('hidden');
+      
+      // Set modal title
+      const modalTitle = categoryModal.querySelector('#category-modal-title');
+      if (modalTitle) {
+        modalTitle.textContent = 'Add Category';
+      }
+      
+      // Reset form
+      const categoryForm = document.getElementById('category-form');
+      if (categoryForm) {
+        categoryForm.reset();
+        
+        // Set random color
+        const colorInput = categoryForm.querySelector('#category-color');
+        if (colorInput) {
+          colorInput.value = this.getRandomColor();
+        }
+      }
+      
+      // Add to modal stack
+      this.modalStack.push('category');
+      
+      console.log('Add category modal shown');
+    }
+  }
+
+  /**
+   * Close current modal
+   */
+  closeCurrentModal() {
+    const modalContainer = document.getElementById('modal-container');
+    const modals = document.querySelectorAll('.modal');
+    
+    if (modalContainer && modals.length > 0) {
+      // Get current modal from stack
+      const currentModal = this.modalStack.pop();
+      
+      if (currentModal) {
+        // Hide current modal
+        const modalElement = document.getElementById(`${currentModal}-modal`);
+        if (modalElement) {
+          modalElement.classList.add('hidden');
+        }
+      }
+      
+      // If no more modals in stack, hide container
+      if (this.modalStack.length === 0) {
+        modalContainer.classList.add('hidden');
+      }
+      
+      console.log('Modal closed');
+    }
+  }
+
+  /**
+   * Save bookmark
    */
   saveBookmark() {
-    const url = document.getElementById('bookmark-url').value;
-    const title = document.getElementById('bookmark-title').value;
-    const description = document.getElementById('bookmark-description').value;
+    // In a real app, this would be handled by the BookmarkController
+    // For now, we'll just close the modal and show a toast
+    this.showToast('Bookmark saved');
+    this.closeCurrentModal();
     
-    if (!url || !title) {
-      alert('URL and title are required');
-      return;
-    }
+    // Trigger bookmark saved event
+    window.dispatchEvent(new CustomEvent('bookmark-saved'));
     
-    // In a real app, this would save to the database
-    console.log('Saving bookmark:', { url, title, description });
-    
-    // For now, just add it to the UI
-    this.addBookmarkToUI({
-      url,
-      title,
-      description,
-      favicon: this.getFaviconUrl(url),
-      categories: []
-    });
-    
-    this.closeModal();
+    console.log('Bookmark saved');
   }
-  
+
   /**
-   * Save a category
+   * Save category
    */
   saveCategory() {
-    const name = document.getElementById('category-name').value;
-    const color = document.getElementById('category-color').value;
+    // In a real app, this would be handled by the CategoryController
+    // For now, we'll just close the modal and show a toast
+    this.showToast('Category saved');
     
-    if (!name) {
-      alert('Category name is required');
-      return;
+    const categoryModal = document.getElementById('category-modal');
+    const fromBookmarkForm = categoryModal && categoryModal.dataset.fromBookmarkForm === 'true';
+    
+    this.closeCurrentModal();
+    
+    // If called from bookmark form, reopen bookmark modal
+    if (fromBookmarkForm) {
+      // In a real app, we would update the categories list in the bookmark form
+      // For now, we'll just reopen the bookmark modal
+      this.showAddBookmarkModal();
     }
     
-    // In a real app, this would save to the database
-    console.log('Saving category:', { name, color });
+    // Trigger category saved event
+    window.dispatchEvent(new CustomEvent('category-saved'));
     
-    // For now, just add it to the UI
-    this.addCategoryToUI({
-      id: Date.now().toString(),
-      name,
-      color,
-      count: 0
-    });
-    
-    this.closeModal();
+    console.log('Category saved');
   }
-  
+
   /**
-   * Add a bookmark to the UI
-   * @param {Object} bookmark - The bookmark object
+   * Show settings view
    */
-  addBookmarkToUI(bookmark) {
-    // Remove empty state if present
-    const emptyState = this.bookmarksContainer.querySelector('.empty-state');
-    if (emptyState) {
-      emptyState.remove();
+  showSettings() {
+    this.showView('settings-view');
+    console.log('Settings view shown');
+  }
+
+  /**
+   * Show import/export view
+   */
+  showImportExport() {
+    this.showView('import-export-view');
+    console.log('Import/Export view shown');
+  }
+
+  /**
+   * Show a specific view
+   * @param {string} viewId - ID of the view to show
+   */
+  showView(viewId) {
+    const views = document.querySelectorAll('.view');
+    views.forEach(view => {
+      view.classList.add('hidden');
+      view.classList.remove('active');
+    });
+    
+    const view = document.getElementById(viewId);
+    if (view) {
+      view.classList.remove('hidden');
+      view.classList.add('active');
     }
     
-    const bookmarkElement = document.createElement('div');
-    bookmarkElement.className = 'bookmark-card';
-    bookmarkElement.innerHTML = `
-      <div class="bookmark-card-header">
-        <img src="${bookmark.favicon}" alt="" class="bookmark-favicon">
-        <h3 class="bookmark-title">${bookmark.title}</h3>
-      </div>
-      <div class="bookmark-content">
-        <div class="bookmark-url">${bookmark.url}</div>
-        <div class="bookmark-description">${bookmark.description || 'No description'}</div>
-      </div>
-      <div class="bookmark-footer">
-        <div class="bookmark-categories">
-          ${bookmark.categories.map(cat => `
-            <span class="bookmark-category" style="background-color: ${cat.color}20; color: ${cat.color}">
-              ${cat.name}
-            </span>
-          `).join('') || '<span class="bookmark-category">Uncategorized</span>'}
-        </div>
-        <div class="bookmark-actions">
-          <button class="icon-button edit-bookmark" aria-label="Edit">
-            <span class="material-icons">edit</span>
-          </button>
-          <button class="icon-button delete-bookmark" aria-label="Delete">
-            <span class="material-icons">delete</span>
-          </button>
-        </div>
-      </div>
-    `;
-    
-    // Add click event to open the bookmark
-    bookmarkElement.addEventListener('click', (e) => {
-      // Don't open if clicking on action buttons
-      if (!e.target.closest('.bookmark-actions')) {
-        window.open(bookmark.url, '_blank');
+    // Update current view title
+    const viewTitle = document.getElementById('current-view-title');
+    if (viewTitle) {
+      switch (viewId) {
+        case 'settings-view':
+          viewTitle.textContent = 'Settings';
+          break;
+        case 'import-export-view':
+          viewTitle.textContent = 'Import/Export';
+          break;
+        default:
+          viewTitle.textContent = 'All Bookmarks';
       }
-    });
+    }
+  }
+
+  /**
+   * Set view mode (grid or list)
+   * @param {string} mode - View mode ('grid' or 'list')
+   */
+  setViewMode(mode) {
+    const bookmarksContainer = document.getElementById('bookmarks-container');
+    const gridViewBtn = document.getElementById('grid-view-button');
+    const listViewBtn = document.getElementById('list-view-button');
     
-    // Add edit and delete functionality
-    const editBtn = bookmarkElement.querySelector('.edit-bookmark');
-    const deleteBtn = bookmarkElement.querySelector('.delete-bookmark');
-    
-    editBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      // In a real app, this would open the edit modal with the bookmark data
-      console.log('Edit bookmark:', bookmark);
-    });
-    
-    deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      // In a real app, this would delete from the database
-      console.log('Delete bookmark:', bookmark);
-      bookmarkElement.remove();
+    if (bookmarksContainer && gridViewBtn && listViewBtn) {
+      if (mode === 'grid') {
+        bookmarksContainer.classList.add('grid-view');
+        bookmarksContainer.classList.remove('list-view');
+        gridViewBtn.classList.add('active');
+        listViewBtn.classList.remove('active');
+      } else {
+        bookmarksContainer.classList.add('list-view');
+        bookmarksContainer.classList.remove('grid-view');
+        listViewBtn.classList.add('active');
+        gridViewBtn.classList.remove('active');
+      }
       
-      // Show empty state if no bookmarks left
-      if (this.bookmarksContainer.children.length === 0) {
-        this.showEmptyState();
-      }
-    });
-    
-    this.bookmarksContainer.appendChild(bookmarkElement);
+      // Save preference
+      localStorage.setItem('viewMode', mode);
+      
+      console.log('View mode set to:', mode);
+    }
   }
-  
+
   /**
-   * Add a category to the UI
-   * @param {Object} category - The category object
+   * Show sort options
    */
-  addCategoryToUI(category) {
-    const categoryList = document.getElementById('category-list');
-    const categoryElement = document.createElement('li');
-    categoryElement.className = 'category-item';
-    categoryElement.dataset.category = category.id;
-    categoryElement.innerHTML = `
-      <span class="material-icons" style="color: ${category.color}">label</span>
-      <span class="category-name">${category.name}</span>
-      <span class="bookmark-count">${category.count}</span>
-    `;
+  showSortOptions() {
+    // In a real app, this would show a dropdown or modal with sort options
+    // For now, we'll just cycle through sort options
+    const sortOptions = ['date-added', 'title', 'most-visited'];
+    const currentSort = localStorage.getItem('sortBy') || 'date-added';
     
-    categoryElement.addEventListener('click', () => {
-      this.selectCategory(category.id);
-    });
+    // Get next sort option
+    const currentIndex = sortOptions.indexOf(currentSort);
+    const nextIndex = (currentIndex + 1) % sortOptions.length;
+    const nextSort = sortOptions[nextIndex];
     
-    // Insert before the last item (which is usually a "Add category" button)
-    categoryList.appendChild(categoryElement);
+    // Save preference
+    localStorage.setItem('sortBy', nextSort);
+    
+    // Show toast
+    let sortName;
+    switch (nextSort) {
+      case 'date-added':
+        sortName = 'Date Added';
+        break;
+      case 'title':
+        sortName = 'Title';
+        break;
+      case 'most-visited':
+        sortName = 'Most Visited';
+        break;
+      default:
+        sortName = 'Date Added';
+    }
+    
+    this.showToast(`Sorted by: ${sortName}`);
+    
+    // Trigger sort event
+    window.dispatchEvent(new CustomEvent('sort-changed', {
+      detail: { sortBy: nextSort }
+    }));
+    
+    console.log('Sort changed to:', nextSort);
   }
-  
+
   /**
    * Select a category
-   * @param {string} categoryId - The ID of the category to select
+   * @param {string} categoryId - ID of the category to select
    */
   selectCategory(categoryId) {
-    // Update active state in the UI
-    document.querySelectorAll('.category-item').forEach(item => {
+    const categoryItems = document.querySelectorAll('.category-item');
+    categoryItems.forEach(item => {
       item.classList.toggle('active', item.dataset.category === categoryId);
     });
     
-    // Update the current view title
-    const categoryName = document.querySelector(`.category-item[data-category="${categoryId}"] .category-name`).textContent;
-    document.getElementById('current-view-title').textContent = categoryName;
-    
-    // In a real app, this would filter bookmarks by category
-    console.log('Selected category:', categoryId);
-    
-    // Close the side nav on mobile
-    if (window.innerWidth <= 768) {
-      this.sideNav.classList.remove('open');
-    }
-  }
-  
-  /**
-   * Show a specific view
-   * @param {string} viewId - The ID of the view to show
-   */
-  showView(viewId) {
-    // Hide all views
-    document.querySelectorAll('.view').forEach(view => {
-      view.classList.add('hidden');
-    });
-    
-    // Show the requested view
-    document.getElementById(viewId).classList.remove('hidden');
-    
-    // Close the side nav on mobile
-    if (window.innerWidth <= 768) {
-      this.sideNav.classList.remove('open');
-    }
-  }
-  
-  /**
-   * Show empty state when no bookmarks
-   */
-  showEmptyState() {
-    const emptyState = document.createElement('div');
-    emptyState.className = 'empty-state';
-    emptyState.innerHTML = `
-      <span class="material-icons">bookmark_border</span>
-      <h3>No bookmarks yet</h3>
-      <p>Add your first bookmark by clicking the + button</p>
-    `;
-    this.bookmarksContainer.appendChild(emptyState);
-  }
-  
-  /**
-   * Get favicon URL for a website
-   * @param {string} url - The website URL
-   * @returns {string} - The favicon URL
-   */
-  getFaviconUrl(url) {
-    try {
-      const urlObj = new URL(url);
-      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}`;
-    } catch (e) {
-      return 'https://www.google.com/s2/favicons?domain=example.com';
-    }
-  }
-  
-  /**
-   * Create sample bookmarks for UI testing
-   * This would be removed in the final app
-   */
-  createSampleBookmarks() {
-    const sampleBookmarks = [
-      {
-        url: 'https://developer.mozilla.org',
-        title: 'MDN Web Docs',
-        description: 'Resources for developers, by developers',
-        favicon: this.getFaviconUrl('https://developer.mozilla.org'),
-        categories: [{ name: 'Development', color: '#4285f4' }]
-      },
-      {
-        url: 'https://github.com',
-        title: 'GitHub',
-        description: 'Where the world builds software',
-        favicon: this.getFaviconUrl('https://github.com'),
-        categories: [{ name: 'Development', color: '#4285f4' }, { name: 'Tools', color: '#34a853' }]
-      },
-      {
-        url: 'https://news.ycombinator.com',
-        title: 'Hacker News',
-        description: 'A social news website focusing on computer science and entrepreneurship',
-        favicon: this.getFaviconUrl('https://news.ycombinator.com'),
-        categories: [{ name: 'News', color: '#fbbc05' }]
+    // Update current view title
+    const viewTitle = document.getElementById('current-view-title');
+    if (viewTitle) {
+      if (categoryId === 'all') {
+        viewTitle.textContent = 'All Bookmarks';
+      } else if (categoryId === 'uncategorized') {
+        viewTitle.textContent = 'Uncategorized';
+      } else {
+        // In a real app, we would get the category name from the database
+        const categoryItem = document.querySelector(`.category-item[data-category="${categoryId}"]`);
+        if (categoryItem) {
+          const categoryName = categoryItem.querySelector('.category-name');
+          if (categoryName) {
+            viewTitle.textContent = categoryName.textContent;
+          }
+        }
       }
+    }
+    
+    // Trigger category selected event
+    window.dispatchEvent(new CustomEvent('category-selected', {
+      detail: { categoryId }
+    }));
+    
+    console.log('Category selected:', categoryId);
+  }
+
+  /**
+   * Show toast notification
+   * @param {string} message - Message to show
+   * @param {number} duration - Duration in milliseconds
+   */
+  showToast(message, duration = 3000) {
+    const toast = document.getElementById('toast');
+    if (toast) {
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      
+      // Hide after duration
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, duration);
+      
+      console.log('Toast shown:', message);
+    }
+  }
+
+  /**
+   * Get a random color for categories
+   * @returns {string} Random color in hex format
+   */
+  getRandomColor() {
+    const colors = [
+      '#4285f4', // Blue
+      '#34a853', // Green
+      '#fbbc05', // Yellow
+      '#ea4335', // Red
+      '#673ab7', // Deep Purple
+      '#3f51b5', // Indigo
+      '#2196f3', // Blue
+      '#009688', // Teal
+      '#4caf50', // Green
+      '#ff9800', // Orange
+      '#ff5722', // Deep Orange
+      '#795548', // Brown
+      '#607d8b'  // Blue Grey
     ];
     
-    // Clear any existing content
-    this.bookmarksContainer.innerHTML = '';
-    
-    // Add sample bookmarks to UI
-    sampleBookmarks.forEach(bookmark => {
-      this.addBookmarkToUI(bookmark);
-    });
+    return colors[Math.floor(Math.random() * colors.length)];
   }
 }

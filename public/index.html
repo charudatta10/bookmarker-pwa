@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Bookmarker - A modern PWA for organizing and managing bookmarks">
     <meta name="theme-color" content="#4285f4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bookmarker">
     
     <title>Bookmarker</title>
     
@@ -26,11 +30,6 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="icons/favicon.png">
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    
-    <!-- iOS meta tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Bookmarker">
 </head>
 <body>
     <header class="app-header">
@@ -125,8 +124,81 @@
             
             <!-- Other views will be dynamically loaded -->
             <div id="bookmark-detail-view" class="view hidden"></div>
-            <div id="settings-view" class="view hidden"></div>
-            <div id="import-export-view" class="view hidden"></div>
+            <div id="settings-view" class="view hidden">
+                <div class="view-header">
+                    <h2>Settings</h2>
+                </div>
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h3>Appearance</h3>
+                        <div class="setting-item">
+                            <span>Theme</span>
+                            <div class="theme-toggle">
+                                <button id="light-theme-btn" class="theme-btn">Light</button>
+                                <button id="dark-theme-btn" class="theme-btn">Dark</button>
+                                <button id="system-theme-btn" class="theme-btn active">System</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Storage</h3>
+                        <div class="setting-item">
+                            <span>Database Size</span>
+                            <span id="database-size">0 KB</span>
+                        </div>
+                        <div class="setting-item">
+                            <button id="clear-data-btn" class="button danger">Clear All Data</button>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>About</h3>
+                        <div class="setting-item">
+                            <span>Version</span>
+                            <span>1.0.0</span>
+                        </div>
+                        <div class="setting-item">
+                            <span>Storage Type</span>
+                            <span>SQLite (WebAssembly)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="import-export-view" class="view hidden">
+                <div class="view-header">
+                    <h2>Import/Export</h2>
+                </div>
+                <div class="import-export-container">
+                    <div class="import-section">
+                        <h3>Import Bookmarks</h3>
+                        <p>Import bookmarks from a file or browser</p>
+                        <div class="import-options">
+                            <button id="import-file-btn" class="button primary">
+                                <span class="material-icons">upload_file</span>
+                                Import from File
+                            </button>
+                            <button id="import-browser-btn" class="button secondary">
+                                <span class="material-icons">language</span>
+                                Import from Browser
+                            </button>
+                        </div>
+                        <input type="file" id="import-file-input" accept=".json,.html" hidden>
+                    </div>
+                    <div class="export-section">
+                        <h3>Export Bookmarks</h3>
+                        <p>Export your bookmarks to a file</p>
+                        <div class="export-options">
+                            <button id="export-json-btn" class="button primary">
+                                <span class="material-icons">code</span>
+                                Export as JSON
+                            </button>
+                            <button id="export-html-btn" class="button secondary">
+                                <span class="material-icons">html</span>
+                                Export as HTML
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -231,61 +303,6 @@
                     });
             });
         }
-    </script>
-    
-    <!-- Button initialization script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize button event listeners
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    console.log('Button clicked:', this.id || this.textContent.trim());
-                    
-                    // Handle specific buttons
-                    if (this.id === 'menu-toggle') {
-                        document.querySelector('.app-container').classList.toggle('nav-open');
-                    }
-                    
-                    if (this.id === 'search-toggle') {
-                        document.getElementById('search-container').classList.toggle('hidden');
-                        if (!document.getElementById('search-container').classList.contains('hidden')) {
-                            document.getElementById('search-input').focus();
-                        }
-                    }
-                    
-                    if (this.id === 'add-bookmark') {
-                        const modalContainer = document.getElementById('modal-container');
-                        const bookmarkModal = document.getElementById('bookmark-modal');
-                        
-                        modalContainer.classList.remove('hidden');
-                        bookmarkModal.classList.remove('hidden');
-                    }
-                    
-                    if (this.classList.contains('close-modal')) {
-                        const modalContainer = document.getElementById('modal-container');
-                        const modals = document.querySelectorAll('.modal');
-                        
-                        modalContainer.classList.add('hidden');
-                        modals.forEach(modal => modal.classList.add('hidden'));
-                    }
-                });
-            });
-            
-            // Handle modal backdrop clicks
-            const modalBackdrop = document.querySelector('.modal-backdrop');
-            if (modalBackdrop) {
-                modalBackdrop.addEventListener('click', function() {
-                    const modalContainer = document.getElementById('modal-container');
-                    const modals = document.querySelectorAll('.modal');
-                    
-                    modalContainer.classList.add('hidden');
-                    modals.forEach(modal => modal.classList.add('hidden'));
-                });
-            }
-            
-            console.log('Button event listeners initialized');
-        });
     </script>
 </body>
 </html>
