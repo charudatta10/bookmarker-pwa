@@ -1,0 +1,54 @@
+************* Module src.__init__
+
+src\__init__.py:1:0: C0301: Line too long (104/100) (line-too-long)
+
+************* Module src.__main__
+
+src\__main__.py:1:0: C0301: Line too long (104/100) (line-too-long)
+
+.\src\__init__.py:1:80: E501 line too long (104 > 79 characters)
+.\src\__main__.py:1:80: E501 line too long (104 > 79 characters)
+Run started:2025-06-01 09:30:56.705406
+
+
+
+Test results:
+
+	No issues identified.
+
+
+
+Code scanned:
+
+	Total lines of code: 0
+
+	Total lines skipped (#nosec): 0
+
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+
+
+Run metrics:
+
+	Total issues (by severity):
+
+		Undefined: 0
+
+		Low: 0
+
+		Medium: 0
+
+		High: 0
+
+	Total issues (by confidence):
+
+		Undefined: 0
+
+		Low: 0
+
+		Medium: 0
+
+		High: 0
+
+Files skipped (0):
+
