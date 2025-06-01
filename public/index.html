@@ -300,13 +300,94 @@
     
     <script type="module" src="js/app.js"></script>
     <script>
-    // --- Simple in-memory storage for static demo ---
+    // --- Use IndexedDB for persistence ---
     let bookmarks = [];
-    let categories = [
-        { id: 'uncategorized', name: 'Uncategorized', color: '#888' }
-    ];
+    let categories = [];
     let currentCategory = 'all';
     let viewMode = localStorage.getItem('viewMode') || 'grid';
+
+    // Open IndexedDB and load data on startup
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('bookmarker-db', 1);
+            request.onupgradeneeded = function (e) {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('bookmarks')) {
+                    db.createObjectStore('bookmarks', { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains('categories')) {
+                    db.createObjectStore('categories', { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function loadData() {
+        const db = await openDB();
+        // Load categories
+        const catTx = db.transaction('categories', 'readonly').objectStore('categories').getAll();
+        catTx.onsuccess = function () {
+            categories = catTx.result.length
+                ? catTx.result
+                : [{ id: 'uncategorized', name: 'Uncategorized', color: '#888' }];
+            // If no categories, add default
+            if (catTx.result.length === 0) {
+                saveCategoryToDB({ id: 'uncategorized', name: 'Uncategorized', color: '#888' }).then(() => {
+                    renderCategories();
+                });
+            } else {
+                renderCategories();
+            }
+        };
+        // Load bookmarks
+        const bmTx = db.transaction('bookmarks', 'readonly').objectStore('bookmarks').getAll();
+        bmTx.onsuccess = function () {
+            bookmarks = bmTx.result;
+            renderBookmarks();
+        };
+    }
+
+    async function saveBookmarkToDB(bm) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('bookmarks', 'readwrite');
+            tx.objectStore('bookmarks').put(bm);
+            tx.oncomplete = resolve;
+            tx.onerror = reject;
+        });
+    }
+
+    async function deleteBookmarkFromDB(id) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('bookmarks', 'readwrite');
+            tx.objectStore('bookmarks').delete(id);
+            tx.oncomplete = resolve;
+            tx.onerror = reject;
+        });
+    }
+
+    async function saveCategoryToDB(cat) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('categories', 'readwrite');
+            tx.objectStore('categories').put(cat);
+            tx.oncomplete = resolve;
+            tx.onerror = reject;
+        });
+    }
+
+    async function deleteCategoryFromDB(id) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('categories', 'readwrite');
+            tx.objectStore('categories').delete(id);
+            tx.oncomplete = resolve;
+            tx.onerror = reject;
+        });
+    }
 
     // --- Utility functions ---
     function renderCategories() {
@@ -436,7 +517,7 @@
         });
     }
 
-    function saveBookmark(editId) {
+    async function saveBookmark(editId) {
         const url = document.getElementById('bookmark-url').value.trim();
         const title = document.getElementById('bookmark-title').value.trim();
         const desc = document.getElementById('bookmark-description').value.trim();
@@ -447,29 +528,23 @@
             let bm = bookmarks.find(b => b.id === editId);
             if (bm) {
                 bm.url = url; bm.title = title; bm.description = desc; bm.categories = selectedCats;
+                await saveBookmarkToDB(bm);
                 showToast('Bookmark updated');
             }
         } else {
-            bookmarks.push({ id: Date.now().toString(), url, title, description: desc, categories: selectedCats });
+            const bm = { id: Date.now().toString(), url, title, description: desc, categories: selectedCats };
+            await saveBookmarkToDB(bm);
             showToast('Bookmark added');
         }
         closeModal();
-        renderBookmarks();
-        renderCategories();
+        await loadData();
     }
 
-    function editBookmark(id, e) {
+    async function deleteBookmark(id, e) {
         e.stopPropagation();
-        let bm = bookmarks.find(b => b.id === id);
-        if (bm) openBookmarkModal(true, bm);
-    }
-
-    function deleteBookmark(id, e) {
-        e.stopPropagation();
-        bookmarks = bookmarks.filter(b => b.id !== id);
+        await deleteBookmarkFromDB(id);
         showToast('Bookmark deleted');
-        renderBookmarks();
-        renderCategories();
+        await loadData();
     }
 
     // --- Category modal logic ---
@@ -485,20 +560,27 @@
         };
     }
 
-    function saveCategory(editId) {
+    async function saveCategory(editId) {
         const name = document.getElementById('category-name').value.trim();
         const color = document.getElementById('category-color').value;
         if (!name) { showToast('Please enter category name'); return; }
         if (editId) {
             let cat = categories.find(c => c.id === editId);
-            if (cat) { cat.name = name; cat.color = color; showToast('Category updated'); }
+            if (cat) { cat.name = name; cat.color = color; await saveCategoryToDB(cat); showToast('Category updated'); }
         } else {
             const id = Date.now().toString();
-            categories.push({ id, name, color });
+            const cat = { id, name, color };
+            await saveCategoryToDB(cat);
             showToast('Category added');
         }
         closeModal();
-        renderCategories();
+        await loadData();
+    }
+
+    async function deleteCategory(id) {
+        await deleteCategoryFromDB(id);
+        showToast('Category deleted');
+        await loadData();
     }
 
     // --- Modal logic ---
@@ -588,8 +670,7 @@
 
     // --- Initial render ---
     setViewMode(viewMode);
-    renderCategories();
-    renderBookmarks();
+    loadData();
     </script>
 </body>
 </html>
