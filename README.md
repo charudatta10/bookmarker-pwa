@@ -31,6 +31,10 @@ Bookmark and read it later app
 
 ## Getting Started
 
+To use bookmarker app fork repo and use it.
+
+To work on project:
+
 1. Clone the repository:
 
 ```bash
